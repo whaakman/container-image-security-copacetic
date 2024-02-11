@@ -32,13 +32,13 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
       - run: |
-          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}'
+          image-ref: '${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}'
           format: 'json'
           output: 'trivy-results.json'
           ignore-unfixed: true
@@ -61,7 +61,7 @@ jobs:
         # and rely on dependabot for digest/version updates
         uses: project-copacetic/copa-action@main
         with:
-          image: "${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}"
+          image: "${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}"
           image-report: "trivy-results.json"
           patched-tag: "patched"
           # buildkit-version: "v0.12.4" # optional, default is latest
