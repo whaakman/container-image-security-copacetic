@@ -1,0 +1,70 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: trivy
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    name: Build
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build an image from Dockerfile
+        run: |
+          docker build -t docker.io/my-organization/my-app:${{ github.sha }} .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/my-organization/my-app:${{ github.sha }}'
+          format: 'json'
+          output: 'trivy-results.json'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Check vulnerability count
+        id: vuln_count
+        run: |
+          report_file="trivy-results.json"
+          vuln_count=$(jq 'if .Results then [.Results[] | select(.Class=="os-pkgs" and .Vulnerabilities!=null) | .Vulnerabilities[]] | length else 0 end' "$report_file")
+          echo "vuln_count=$vuln_count" >> $GITHUB_OUTPUT
+
+      - name: Run Copa action
+        if: steps.vuln_count.outputs.vuln_count != '0'
+        id: copa
+        # using main for testing purposes
+        # use a tag (such as v1 or v1.0.1) at a bare minimum
+        # recommendation is to pin to a digest for security and stability
+        # and rely on dependabot for digest/version updates
+        uses: project-copacetic/copa-action@main
+        with:
+          image: ${{ matrix.images }}
+          image-report: "trivy-results.json"
+          patched-tag: "patched"
+          # buildkit-version: "v0.12.4" # optional, default is latest
+          # copa-version: "0.6.0" # optional, default is latest
+
+      - name: 'Push images to ACR'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
