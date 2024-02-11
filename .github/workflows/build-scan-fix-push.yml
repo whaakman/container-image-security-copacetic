@@ -58,7 +58,7 @@ jobs:
         with:
           image: ${{ matrix.images }}
           image-report: "trivy-results.json"
-          patched-tag: "patched"
+          patched-tag: "abcd1234"
           # buildkit-version: "v0.12.4" # optional, default is latest
           # copa-version: "0.6.0" # optional, default is latest
 
