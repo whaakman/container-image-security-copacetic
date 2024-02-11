@@ -25,16 +25,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 'Push images to ACR'
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-      - run: |
-          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}
-          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}
-
       - name: Login to Azure
         id: login
         uses: azure/login@v1
@@ -44,6 +34,16 @@ jobs:
       - name: Login to Azure Container Registry
         run: |
             az acr login --name ${{ secrets.ACR_NAME }}
+
+      - name: 'Push images to ACR'
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker build . -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
@@ -71,7 +71,7 @@ jobs:
         # and rely on dependabot for digest/version updates
         uses: project-copacetic/copa-action@main
         with:
-          image: '${{ secrets.REGISTRY_LOGIN_SERVER }}/my-app:${{ github.sha }}'
+          image: 'acrwesdemo001.azurecr.io/my-app:${{ github.sha }}'
           image-report: "trivy-results.json"
           patched-tag: "patched"
           # buildkit-version: "v0.12.4" # optional, default is latest
