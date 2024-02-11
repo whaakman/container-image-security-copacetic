@@ -56,9 +56,9 @@ jobs:
         # and rely on dependabot for digest/version updates
         uses: project-copacetic/copa-action@main
         with:
-          image: ${{ matrix.images }}
+          image: "docker.io/my-organization/my-app:${{ github.sha }}"
           image-report: "trivy-results.json"
-          patched-tag: "abcd1234"
+          patched-tag: "patched"
           # buildkit-version: "v0.12.4" # optional, default is latest
           # copa-version: "0.6.0" # optional, default is latest
 
