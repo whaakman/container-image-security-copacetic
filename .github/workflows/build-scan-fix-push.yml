@@ -73,8 +73,23 @@ jobs:
           tar -xzf copa_${COPA_VERSION}_linux_amd64.tar.gz
           chmod +x copa
 
+          imageName=$(echo ${{ matrix.images }} | cut -d ':' -f1)
+          current_tag=$(echo ${{ matrix.images }} | cut -d ':' -f2)
+
+          if [[ $current_tag == *-[0-9] ]]; then
+                  numeric_tag=$(echo "$current_tag" | awk -F'-' '{print $NF}')
+                  non_numeric_tag=$(echo "$current_tag" | sed "s#-$numeric_tag##g")
+                  incremented_tag=$((numeric_tag+1))
+                  new_tag="$non_numeric_tag-$incremented_tag"
+          else
+              new_tag="$current_tag-1"
+          fi
+
+          echo "patched_tag=$new_tag" >> $GITHUB_OUTPUT
+          echo "imageName=$imageName" >> $GITHUB_OUTPUT
+
           docker buildx create --use --name builder
-          ./copa patch -i ${{ matrix.images }} -r trivy-results.json -t patched
+          ./copa patch -i ${{ matrix.images }} -r trivy-results.json -t $patched_tag
           echo "copa_patch=true" >> $GITHUB_OUTPUT
         env:
           COPA_VERSION: 0.6.0
@@ -82,5 +97,5 @@ jobs:
       - name: Push patched image
         if: steps.vuln_count.outputs.vuln_count != '0'
         run: |
-          docker push ${{ matrix.images }}-patched
+          docker push ${{ steps.copa_patch.outputs.imageName }}:${{ steps.copa_patch.outputs.patched_tag }}
 
