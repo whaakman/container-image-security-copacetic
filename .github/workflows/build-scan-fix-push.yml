@@ -31,6 +31,17 @@ jobs:
       # - name: Checkout code
       #   uses: actions/checkout@v3
 
+      - name: Set up Docker
+        uses: crazy-max/ghaction-setup-docker@v3
+        with:
+          daemon-config: |
+            {
+              "debug": true,
+              "features": {
+                "containerd-snapshotter": true
+              }
+            }
+
       - name: Login to Azure
         id: login
         uses: azure/login@v1
