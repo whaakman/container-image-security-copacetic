@@ -89,6 +89,10 @@ jobs:
           # buildkit-version: "v0.12.4" # optional, default is latest
           # copa-version: "0.6.0" # optional, default is latest
           buildkit-version: 'v0.11.6'
-          
 
+      - name: Push patched image
+        if: steps.vuln_count.outputs.vuln_count != '0'
+        run: |
+          docker push ${{ steps.copa.outputs.patched-image }}     
+          echo "DIGEST=$(docker push ${{ steps.copa.outputs.patched-image }} | grep -oE 'sha256:[a-f0-9]{64}')" >> $GITHUB_OUTPUT    
 
