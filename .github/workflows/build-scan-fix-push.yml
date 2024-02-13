@@ -31,16 +31,12 @@ jobs:
       # - name: Checkout code
       #   uses: actions/checkout@v3
 
-      - name: Set up Docker
-        uses: crazy-max/ghaction-setup-docker@v3
+      - name: 'Docker Login'
+        uses: azure/docker-login@v1
         with:
-          daemon-config: |
-            {
-              "debug": true,
-              "features": {
-                "containerd-snapshotter": true
-              }
-            }
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}   
 
       - name: Login to Azure
         id: login
@@ -72,29 +68,19 @@ jobs:
           vuln_count=$(jq 'if .Results then [.Results[] | select(.Class=="os-pkgs" and .Vulnerabilities!=null) | .Vulnerabilities[]] | length else 0 end' "$report_file")
           echo "vuln_count=$vuln_count" >> $GITHUB_OUTPUT
 
-      - name: Run Copa action
-        if: steps.vuln_count.outputs.vuln_count != '0'
-        id: copa
-        # using main for testing purposes
-        # use a tag (such as v1 or v1.0.1) at a bare minimum
-        # recommendation is to pin to a digest for security and stability
-        # and rely on dependabot for digest/version updates
-        #uses: project-copacetic/copa-action@main
-        uses: ashnamehrotra/copa-action@support-for-buildx-2-test
-        with:
-          image: ${{ matrix.images }}
-          image-report: "trivy-results.json"
-          patched-tag: "patched"
-          # buildkit-version: "v0.12.4" # optional, default is latest
-          # copa-version: "0.6.0" # optional, default is latest
-          #buildkit-version: 'v0.12.4'
-
-      - name: 'Docker Login'
-        uses: azure/docker-login@v1
-        with:
-          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}         
+          - name: copa patch
+          if: steps.vuln_count.outputs.vuln_count > 0
+          id: copa_patch
+          run: |
+            wget https://github.com/project-copacetic/copacetic/releases/download/v${COPA_VERSION}/copa_${COPA_VERSION}_linux_amd64.tar.gz
+            tar -xzf copa_${COPA_VERSION}_linux_amd64.tar.gz
+            chmod +x copa
+  
+            docker buildx create --use --name builder
+            ./copa patch -i ${{ matrix.images }} -r report.json -t 1.16-patched
+            echo "copa_patch=true" >> $GITHUB_OUTPUT
+          env:
+            COPA_VERSION: 0.6.0
 
       - name: Push patched image
         if: steps.vuln_count.outputs.vuln_count != '0'
