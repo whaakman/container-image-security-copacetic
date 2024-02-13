@@ -81,7 +81,8 @@ jobs:
         # use a tag (such as v1 or v1.0.1) at a bare minimum
         # recommendation is to pin to a digest for security and stability
         # and rely on dependabot for digest/version updates
-        uses: project-copacetic/copa-action@main
+        #uses: project-copacetic/copa-action@main
+        uses: ashnamehrotra/copa-action@support-for-buildx-2-test
         with:
           image: ${{ matrix.images }}
           image-report: "trivy-results.json"
