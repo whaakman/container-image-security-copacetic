@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        images: ['acrwesdemo001.azurecr.io/demo-image:v1.0.0']
+        images: ['golang:1.16.9-alpine']
 
     steps:
       # - name: Checkout code
@@ -77,7 +77,7 @@ jobs:
           chmod +x copa
 
           docker buildx create --use --name builder
-          ./copa patch -i ${{ matrix.images }} -r trivy-results.json -t 1.16-patched
+          ./copa patch -i ${{ matrix.images }} -r trivy-results.json -t patched
           echo "copa_patch=true" >> $GITHUB_OUTPUT
         env:
           COPA_VERSION: 0.6.0
@@ -85,6 +85,6 @@ jobs:
       - name: Push patched image
         if: steps.vuln_count.outputs.vuln_count != '0'
         run: |
-          docker push ${{ steps.copa.outputs.patched-image }}     
+          docker push ${{ matrix.images }}     
           echo "DIGEST=$(docker push ${{ steps.copa.outputs.patched-image }} | grep -oE 'sha256:[a-f0-9]{64}')" >> $GITHUB_OUTPUT    
 
