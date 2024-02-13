@@ -77,7 +77,7 @@ jobs:
           chmod +x copa
 
           docker buildx create --use --name builder
-          ./copa patch -i ${{ matrix.images }} -r trivy-results.json -t patched
+          ./copa patch -i ${{ matrix.images }} -r trivy-results.json -t v1.0.1-patched
           echo "copa_patch=true" >> $GITHUB_OUTPUT
         env:
           COPA_VERSION: 0.6.0
