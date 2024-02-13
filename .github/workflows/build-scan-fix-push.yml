@@ -80,6 +80,6 @@ jobs:
           # buildkit-version: "v0.12.4" # optional, default is latest
           # copa-version: "0.6.0" # optional, default is latest
           buildkit-version: 'v0.11.6'
-          copa-version: '0.3.0'
+          
 
 
