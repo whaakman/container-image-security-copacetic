@@ -85,6 +85,5 @@ jobs:
       - name: Push patched image
         if: steps.vuln_count.outputs.vuln_count != '0'
         run: |
-          docker push ${{ matrix.images }}     
-          echo "DIGEST=$(docker push ${{ steps.copa.outputs.patched-image }} | grep -oE 'sha256:[a-f0-9]{64}')" >> $GITHUB_OUTPUT    
+          docker push acrwesdemo001.azurecr.io/backend:v1.0.1-patchedW
 
