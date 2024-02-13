@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        images: ['golang:1.16.9-alpine']
+        images: ['acrwesdemo001.azurecr.io/backend:v1.0.1']
 
     steps:
       # - name: Checkout code
@@ -85,5 +85,5 @@ jobs:
       - name: Push patched image
         if: steps.vuln_count.outputs.vuln_count != '0'
         run: |
-          docker push acrwesdemo001.azurecr.io/backend:v1.0.1-patchedW
+          docker push acrwesdemo001.azurecr.io/backend:v1.0.1-patched
 
