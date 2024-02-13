@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  patchypatch:
     permissions:
       contents: read # for actions/checkout to fetch code
       packages: write
@@ -21,9 +21,15 @@ jobs:
       actions: read # only required for a private repository by hub/codeql-action/upload-sarif to get the Action run status
     name: Magic
     runs-on: "ubuntu-20.04"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        images: ['acrwesdemo001.azurecr.io/demo-image:v1.0.0']
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # - name: Checkout code
+      #   uses: actions/checkout@v3
 
       - name: Login to Azure
         id: login
@@ -51,8 +57,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          #image-ref: '${{ secrets.REGISTRY_LOGIN_SERVER }}/wes-demo:${{ github.sha }}'
-          image-ref: 'acrwesdemo001.azurecr.io/wes-demo:f288f6d929fb10855f0a809a4a3ab71a3cafcc44'
+          image-ref: ${{ matrix.images }}
           format: 'json'
           output: 'trivy-results.json'
           ignore-unfixed: true
@@ -75,8 +80,7 @@ jobs:
         # and rely on dependabot for digest/version updates
         uses: project-copacetic/copa-action@main
         with:
-          #image: '${{ secrets.REGISTRY_LOGIN_SERVER }}/wes-demo:${{ github.sha }}'
-          image: 'acrwesdemo001.azurecr.io/wes-demo:f288f6d929fb10855f0a809a4a3ab71a3cafcc44'
+          image: ${{ matrix.images }}
           image-report: "trivy-results.json"
           patched-tag: "patched"
           # buildkit-version: "v0.12.4" # optional, default is latest
