@@ -1,5 +1,5 @@
 # GitHub Action demo leveraging trivy, copa and ACR
-This repo contains an example to run trivy and copa inside a GitHub action to scan and patch container images hosted in Azure Container Registry..
+This repo contains an example to run trivy and copa inside a GitHub action to scan and patch container images hosted in Azure Container Registry.
 
 ## Details
 Two specific details need to be pointed out. The action contains a run command to run copa as the default GitHub copa-action does not run well on GitHub runners currently (requires containerd image store). The workaround is to pull the copa binary and run it ourselves. For versioning, some scripting is added, adjust this to your liking and according to your versioning strategy. 
